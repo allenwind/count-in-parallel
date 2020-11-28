@@ -37,7 +37,7 @@ def timethis(func):
 @timethis
 def count_in_parrallel(tokenize, batch_generator, processes, maxsize=300):
     def batch_counter(batch_texts_queue, tokens_queue):
-        # 批量计算器
+        # 批量统计
         while True:
             tokens = collections.Counter()
             batch_texts = batch_texts_queue.get()
@@ -83,7 +83,7 @@ def count_in_parrallel(tokenize, batch_generator, processes, maxsize=300):
 if __name__ == "__main__":
     # 测试
     import jieba
-    path = "/home/zhiwen/workspace/dataset/THUCTC/THUCNews/**/*.txt"
+    path = "THUCNews/**/*.txt"
     tokens = count_in_parrallel(
         tokenize=jieba.lcut,
         batch_generator=load_batch_texts(path, limit=10000),
