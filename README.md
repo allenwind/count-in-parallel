@@ -33,3 +33,5 @@ tokens = count_in_parrallel(
 2CPUs 16s
 
 1CPUs 32s
+
+6CPUS 800000文件 350s
