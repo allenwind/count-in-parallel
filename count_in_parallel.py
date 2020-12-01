@@ -10,13 +10,13 @@ from multiprocessing import Pool, Queue
 
 basic_tokenize = lambda text: list(text)
 
-def load_batch_texts(path, batch_size=300, limit=None, shuffle=True):
+def load_batch_texts(files, batch_size=300, limit=None, shuffle=True):
     # 批量的形式加载文本
-    files = glob.glob(path)[:limit]
     if not files:
         raise FileNotFoundError("without any files")
     if shuffle:
         random.shuffle(files)
+    files = files[:limit]
     batch_texts = []
     for file in files:
         with open(file, "r", encoding="utf-8") as fd:
@@ -40,6 +40,9 @@ def timethis(func):
 
 class Counter(collections.Counter):
 
+    def __missing__(self, key):
+        return 0
+
     def most_common(self, n=None):
         # 支持传入负数，表示least common
         if n is None:
@@ -53,7 +56,12 @@ class Counter(collections.Counter):
         return heapq.nsmallest(n, self.items(), key=itemgetter(1))
 
 @timethis
-def count_in_parrallel(tokenize, batch_generator, processes, maxsize=300, preprocess=None):
+def count_in_parrallel(
+    tokenize,
+    batch_generator,
+    processes,
+    maxsize=300,
+    preprocess=None):
     # 文本tokenize前的预处理
     if preprocess is None:
         preprocess = lambda x: x
@@ -103,16 +111,46 @@ def count_in_parrallel(tokenize, batch_generator, processes, maxsize=300, prepro
     pool.terminate()
     return gtokens
 
+def count_in_parrallel_from_files(
+    tokenize,
+    files,
+    processes,
+    maxsize=300,
+    preprocess=None,
+    batch_size=300,
+    limit=None,
+    shuffle=True):
+    batch_generator = load_batch_texts(files, batch_size, limit, shuffle)
+    tokens = count_in_parrallel(
+        tokenize,
+        batch_generator,
+        processes,
+        maxsize,
+        preprocess
+    )
+    return tokens
+
 if __name__ == "__main__":
     # 测试
     import jieba
     path = "/home/zhiwen/workspace/dataset/THUCTC/THUCNews/**/*.txt"
+    files = glob.glob(path)
     tokens = count_in_parrallel(
         tokenize=jieba.lcut,
-        batch_generator=load_batch_texts(path, limit=10000),
+        batch_generator=load_batch_texts(files, limit=10000),
         processes=6,
         maxsize=300,
         preprocess=lambda x: x.lower()
+    )
+    print(len(tokens))
+    print(tokens.most_common(200))
+    print(tokens.most_common(-200))
+
+    tokens = count_in_parrallel_from_files(
+        tokenize=jieba.lcut,
+        files=files,
+        processes=6,
+        limit=10000
     )
     print(len(tokens))
     print(tokens.most_common(200))
