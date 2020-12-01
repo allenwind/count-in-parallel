@@ -53,13 +53,18 @@ class Counter(collections.Counter):
         return heapq.nsmallest(n, self.items(), key=itemgetter(1))
 
 @timethis
-def count_in_parrallel(tokenize, batch_generator, processes, maxsize=300):
+def count_in_parrallel(tokenize, batch_generator, processes, maxsize=300, preprocess=None):
+    # 文本tokenize前的预处理
+    if preprocess is None:
+        preprocess = lambda x: x
+
     def batch_counter(batch_texts_queue, tokens_queue):
         # 批量统计
         while True:
             tokens = Counter()
             batch_texts = batch_texts_queue.get()
             for text in batch_texts:
+                text = preprocess(text)
                 for token in tokenize(text):
                     tokens[token] += 1
             tokens_queue.put(tokens)
@@ -106,7 +111,8 @@ if __name__ == "__main__":
         tokenize=jieba.lcut,
         batch_generator=load_batch_texts(path, limit=10000),
         processes=6,
-        maxsize=300
+        maxsize=300,
+        preprocess=lambda x: x.lower()
     )
     print(len(tokens))
     print(tokens.most_common(200))
