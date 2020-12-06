@@ -7,20 +7,28 @@ import heapq
 from functools import wraps
 from operator import itemgetter
 from multiprocessing import Pool, Queue
+from concurrent.futures import ThreadPoolExecutor
 
 basic_tokenize = lambda text: list(text)
 
 def load_batch_texts(files, batch_size=300, limit=None, shuffle=True):
     # 批量的形式加载文本
-    if not files:
-        raise FileNotFoundError("without any files")
-    if shuffle:
-        random.shuffle(files)
-    files = files[:limit]
-    batch_texts = []
-    for file in files:
+
+    def load(file):
         with open(file, "r", encoding="utf-8") as fd:
             text = fd.read()
+        return text
+
+    if not files:
+        raise FileNotFoundError("without any files")
+
+    if shuffle:
+        random.shuffle(files)
+
+    files = files[:limit]
+    executor = ThreadPoolExecutor(max_workers=1)
+    batch_texts = []
+    for text in executor.map(load, files):
         batch_texts.append(text)
         if len(batch_texts) == batch_size:
             yield batch_texts
