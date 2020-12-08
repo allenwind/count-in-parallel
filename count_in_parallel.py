@@ -113,6 +113,9 @@ def count_in_parrallel(
             except queue.Full:
                 batch_tokens_size += merge_tokens()
 
+            if batch_texts_size % (processes * maxsize // 2) == 0:
+                batch_tokens_size += merge_tokens()
+
     while batch_tokens_size != batch_texts_size:
         batch_tokens_size += merge_tokens()
 
