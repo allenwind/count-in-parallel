@@ -27,8 +27,12 @@ def load_batch_texts(files, batch_size=300, limit=None, shuffle=True):
 
     files = files[:limit]
     executor = ThreadPoolExecutor(max_workers=1)
+    gen = executor.map(load, files)
+    yield from split_into_batchs(gen, batch_size)
+
+def split_into_batchs(gen, batch_size=300):
     batch_texts = []
-    for text in executor.map(load, files):
+    for text in gen:
         batch_texts.append(text)
         if len(batch_texts) == batch_size:
             yield batch_texts
@@ -42,7 +46,7 @@ def timethis(func):
         start = time.time()
         result = func(*args, **kwargs)
         end = time.time()
-        print(func.__name__, "{:.3f}s".format(end-start))
+        print(func.__name__, "elapsed time {:.3f}s".format(end-start))
         return result
     return wrapper
 
@@ -64,7 +68,7 @@ class Counter(collections.Counter):
         return heapq.nsmallest(n, self.items(), key=itemgetter(1))
 
 @timethis
-def count_in_parrallel(
+def count_in_parallel(
     tokenize,
     batch_generator,
     processes,
@@ -122,7 +126,7 @@ def count_in_parrallel(
     pool.terminate()
     return gtokens
 
-def count_in_parrallel_from_files(
+def count_in_parallel_from_files(
     tokenize,
     files,
     processes,
@@ -132,7 +136,7 @@ def count_in_parrallel_from_files(
     limit=None,
     shuffle=True):
     batch_generator = load_batch_texts(files, batch_size, limit, shuffle)
-    tokens = count_in_parrallel(
+    tokens = count_in_parallel(
         tokenize,
         batch_generator,
         processes,
@@ -141,28 +145,20 @@ def count_in_parrallel_from_files(
     )
     return tokens
 
-if __name__ == "__main__":
-    # 测试
-    import jieba
-    path = "/home/zhiwen/workspace/dataset/THUCTC/THUCNews/**/*.txt"
-    files = glob.glob(path)
-    tokens = count_in_parrallel(
-        tokenize=jieba.lcut,
-        batch_generator=load_batch_texts(files, limit=10000),
-        processes=6,
-        maxsize=300,
-        preprocess=lambda x: x.lower()
+def count_in_parallel_from_generator(
+    tokenize,
+    generator,
+    processes,
+    maxsize=300,
+    preprocess=None,
+    batch_size=300):
+    batch_generator = split_into_batchs(generator, batch_size)
+    tokens = count_in_parallel(
+        tokenize,
+        batch_generator,
+        processes,
+        maxsize,
+        preprocess
     )
-    print(len(tokens))
-    print(tokens.most_common(200))
-    print(tokens.most_common(-200))
+    return tokens
 
-    tokens = count_in_parrallel_from_files(
-        tokenize=jieba.lcut,
-        files=files,
-        processes=6,
-        limit=10000
-    )
-    print(len(tokens))
-    print(tokens.most_common(200))
-    print(tokens.most_common(-200))
