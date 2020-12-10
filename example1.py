@@ -1,3 +1,4 @@
+import itertools
 import jieba
 from count_in_parallel import *
 
@@ -10,7 +11,7 @@ def gen(file):
     for line in lines:
         yield line
 
-hybrid_tokenize = lambda x: list(x) + jieba.lcut(x)
+hybrid_tokenize = lambda x: itertools.chain((i for i in x), jieba.cut(x))
 
 tokens = count_in_parallel_from_generator(
     tokenize=hybrid_tokenize,
