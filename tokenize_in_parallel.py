@@ -61,6 +61,6 @@ def tokenize_in_parallel(
         batch_tokens_size += merge()
 
     pool.terminate()
-    gtokens.sort(key=lambda x: x[0])
+    gtokens.sort(key=lambda x: x[0]) # 还原原来的输入顺序
     gtokens = [i[1] for i in gtokens]
     return gtokens

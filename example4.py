@@ -2,6 +2,8 @@ import itertools
 import jieba
 from tokenize_in_parallel import *
 
+# 并行分词示例
+
 file = "/home/zhiwen/workspace/dataset/THUCNews-title-label.txt"
 
 def gen(file):
@@ -11,6 +13,7 @@ def gen(file):
     for line in lines:
         yield line
 
+# 分词结果按原顺序返回
 tokens = tokenize_in_parallel(
     tokenize=jieba.lcut,
     generator=gen(file),

@@ -1,5 +1,9 @@
 # count-in-parallel
 
+并行的词频统计和分词。
+
+## 并行词频统计
+
 在数据集不大的情况下，通常我们使用类似如下代码来统计字词频率表，
 
 ```python
@@ -27,6 +31,39 @@ print(len(tokens))
 print(tokens.most_common(200))
 print(tokens.most_common(-200))
 ```
+
+## 并行分词
+
+并行分词例子，分词结果按原句子顺序返回，这样有利于Tokenizer处理和模型训练等相关操作，
+
+```python
+import itertools
+import jieba
+from tokenize_in_parallel import *
+
+file = "THUCNews-title-label.txt"
+
+def gen(file):
+    with open(file, encoding="utf-8") as fp:
+        text = fp.read()
+    lines = text.split("\n")[:-1]
+    for line in lines:
+        yield line
+
+# 分词结果按原顺序返回
+tokens = tokenize_in_parallel(
+    tokenize=jieba.lcut,
+    generator=gen(file),
+    processes=7,
+    maxsize=300,
+    preprocess=lambda x: x.lower()
+)
+
+print(len(tokens))
+for i in range(10):
+    print(tokens[i])
+```
+
 
 10000个THUCNews文件，jieba作tokenize下测试：
 
