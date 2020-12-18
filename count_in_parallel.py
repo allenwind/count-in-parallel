@@ -8,6 +8,7 @@ from functools import wraps
 from operator import itemgetter
 from multiprocessing import Pool, Queue
 from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import cpu_count
 
 basic_tokenize = lambda text: list(text)
 
@@ -71,9 +72,12 @@ class Counter(collections.Counter):
 def count_in_parallel(
     tokenize,
     batch_generator,
-    processes,
+    processes=None,
     maxsize=300,
     preprocess=None):
+    if processes is None:
+        processes = cpu_count() - 1
+
     # 文本tokenize前的预处理
     if preprocess is None:
         preprocess = lambda x: x
@@ -129,7 +133,7 @@ def count_in_parallel(
 def count_in_parallel_from_files(
     tokenize,
     files,
-    processes,
+    processes=None,
     maxsize=300,
     preprocess=None,
     batch_size=300,
@@ -148,7 +152,7 @@ def count_in_parallel_from_files(
 def count_in_parallel_from_generator(
     tokenize,
     generator,
-    processes,
+    processes=None,
     maxsize=300,
     preprocess=None,
     batch_size=300):

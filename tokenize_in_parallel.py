@@ -1,4 +1,5 @@
 from multiprocessing import Pool, Queue
+from multiprocessing import cpu_count
 from count_in_parallel import *
 
 def batch_generator(generator, batch_size=300):
@@ -15,11 +16,14 @@ def batch_generator(generator, batch_size=300):
 def tokenize_in_parallel(
     tokenize,
     generator,
-    processes=7,
+    processes=None,
     maxsize=300,
     preprocess=None):
     if preprocess is None:
         preprocess = lambda x: x
+
+    if processes is None:
+        processes = cpu_count() - 1
     
     def batch_tokenize(batch_texts_queue, tokens_queue):
         while True:
