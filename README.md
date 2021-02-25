@@ -64,15 +64,16 @@ for i in range(10):
     print(tokens[i])
 ```
 
+以THUCNews文件集作为测试，jieba作tokenize下测试：
 
-10000个THUCNews文件，jieba作tokenize下测试：
+| CPUs  | 文件数 | 时间     |
+| ----- | ------ | -------- |
+| 6CPUS | 10000  | 8s       |
+| 4CPUS | 10000  | 11s      |
+| 2CPUs | 10000  | 16s      |
+| 1CPUs | 10000  | 32s      |
+| 1CPUs | 800000 | 近40分钟 |
+| 6CPUS | 800000 | 350s     |
 
-6CPUS 10000文件 8s
+可以看到，并行效果还是不错的。
 
-4CPUS 10000文件 11s
-
-2CPUs 10000文件 16s
-
-1CPUs 10000文件 32s
-
-6CPUS 800000文件 350s
